@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Battery Monitor">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Battery Balancing System | PWA Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            color: #f0f0f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* PWA Install Banner */
+        .install-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #2a2a3a, #1a1a2e);
+            border-radius: 16px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(76,175,80,0.3);
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+        }
+        .install-banner.show {
+            transform: translateY(0);
+        }
+        .install-banner button {
+            background: #4CAF50;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .install-banner button:hover {
+            background: #45a049;
+        }
+
+        /* Update notification */
+        .update-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .update-toast.show {
+            transform: translateX(0);
+        }
+        .update-toast i {
+            font-size: 1.2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #4CAF50);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header p {
+            color: #888;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+
+        .offline-badge {
+            display: inline-block;
+            background: #F44336;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .last-update {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .battery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .battery-card {
+            background: linear-gradient(145deg, #1e1e2f, #161622);
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .battery-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(76,175,80,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .battery-icon {
+            font-size: 2rem;
+        }
+
+        .gauge-container {
+            text-align: center;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .gauge {
+            width: 160px;
+            height: 160px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .gauge svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: #2a2a3a;
+            stroke-width: 12;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.6s ease;
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-percent {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .gauge-unit {
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .balancing-factor {
+            background: rgba(76,175,80,0.2);
+            border: 1px solid rgba(76,175,80,0.3);
+        }
+
+        .voltage-good { color: #4CAF50; }
+        .voltage-warning { color: #FFC107; }
+        .voltage-danger { color: #F44336; }
+
+        .temp-normal { color: #4CAF50; }
+        .temp-warm { color: #FF9800; }
+        .temp-hot { color: #F44336; }
+
+        .current-charge { color: #4CAF50; }
+        .current-discharge { color: #F44336; }
+
+        .charts-section {
+            background: rgba(255,255,255,0.02);
+            border-radius: 28px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .charts-section h3 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .chart-container {
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            padding: 15px;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            max-height: 300px;
+            width: 100% !important;
+        }
+
+        .system-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .system-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .system-label {
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+
+        .system-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .footer-status {
+            margin-top: 30px;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8rem;
+            color: #666;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .pwa-badge {
+            display: inline-block;
+            background: rgba(76,175,80,0.2);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .battery-grid { gap: 15px; }
+            .gauge { width: 130px; height: 130px; }
+            .gauge-percent { font-size: 1.4rem; }
+            .stat-value { font-size: 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .gauge { width: 110px; height: 110px; }
+            .gauge-percent { font-size: 1.2rem; }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #888;
+        }
+
+        .alert-pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .emergency {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- PWA Install Banner -->
+        <div class="install-banner" id="installBanner">
+            <span><i class="fas fa-download"></i> Install Battery Monitor App</span>
+            <button id="installBtn">Install</button>
+        </div>
+
+        <!-- Update Notification -->
+        <div class="update-toast" id="updateToast" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i>
+            <span>New version available! Click to update.</span>
+        </div>
+
+        <div class="header">
+            <h1><i class="fas fa-battery-full" style="margin-right: 12px; color: #4CAF50;"></i>Battery Balancing System</h1>
+            <p>Real-Time Monitoring | 3-Battery Setup (3.7V Li-ion, 6V SLA, 12V LiFePO4)</p>
+            <div class="status-badge" id="connectionStatus">
+                <i class="fas fa-circle" style="color: #ffaa00; font-size: 0.7rem;"></i> Connecting to Firebase...
+            </div>
+            <div class="last-update" id="lastUpdate">Waiting for data...</div>
+            <div class="pwa-badge" id="pwaBadge">
+                <i class="fas fa-mobile-alt"></i> PWA Ready
+            </div>
+        </div>
+
+        <div class="battery-grid" id="batteryGrid">
+            <div class="loading"><i class="fas fa-spinner fa-pulse"></i> Loading battery data...</div>
+        </div>
+
+        <div class="charts-section">
+            <h3><i class="fas fa-chart-line"></i> Voltage Trends (Last 20 readings)</h3>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <canvas id="voltageChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="system-panel" id="systemPanel">
+            <div class="system-item">
+                <div class="system-label"><i class="fas fa-charging-station"></i> SYSTEM STATUS</div>
+                <div class="system-value" id="sysStatus">--</div>
+            </div>
+            <div class="system-item">
+                <div class="system-label"><i class="fas fa-balance-scale"></i> IMBALANCE</div>
+                <div class="system-value" id="imbalance">--%</div>
+            </div>
+            <div class="system-item">
+                <div class="system-label"><i class="fas fa-sun"></i> SOLAR PANELS</div>
+                <div class="system-value" id="solarCurrents">-- / -- / -- A</div>
+            </div>
+            <div class="system-item">
+                <div class="system-label"><i class="fas fa-thermometer-half"></i> AMBIENT</div>
+                <div class="system-value" id="ambient">--°C / --%</div>
+            </div>
+            <div class="system-item">
+                <div class="system-label"><i class="fas fa-chart-simple"></i> CYCLE</div>
+                <div class="system-value" id="cycleInfo">--/--</div>
+            </div>
+            <div class="system-item">
+                <div class="system-label"><i class="fas fa-waveform"></i> PHASE</div>
+                <div class="system-value" id="phaseInfo">--</div>
+            </div>
+        </div>
+
+        <div class="footer-status">
+            <i class="fas fa-database"></i> Data from Firebase Realtime Database | Updates every 10 seconds
+            <br>
+            <i class="fas fa-offline"></i> PWA Mode: Works offline
+        </div>
+    </div>
+
+    <script>
+        // ========== PWA SETUP ==========
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => {
+                        console.log('Service Worker registered!', reg);
+                        
+                        // Check for updates every minute
+                        setInterval(() => {
+                            reg.update();
+                        }, 60000);
+                        
+                        // Listen for new version
+                        reg.onupdatefound = () => {
+                            const installingWorker = reg.installing;
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        // New version available
+                                        document.getElementById('updateToast').classList.add('show');
+                                        setTimeout(() => {
+                                            document.getElementById('updateToast').classList.remove('show');
+                                        }, 10000);
+                                    }
+                                }
+                            };
+                        };
+                    })
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+        
+        // PWA Installation
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').classList.add('show');
+        });
+        
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('PWA installed');
+                    document.getElementById('installBanner').classList.remove('show');
+                }
+                deferredPrompt = null;
+            }
+        });
+        
+        // Hide install banner if already installed or dismissed
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installBanner').classList.remove('show');
+        });
+
+        // ========== FIREBASE CONFIGURATION ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyAb1tt5CDHtrGSkb9sFumjRo22BYV0ex9A",
+            databaseURL: "https://smart-battery-b06ae-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // ========== STORE HISTORICAL DATA ==========
+        let historyData = {
+            b1: { voltages: [], temps: [] },
+            b2: { voltages: [], temps: [] },
+            b3: { voltages: [], temps: [] },
+            timestamps: []
+        };
+        
+        const MAX_HISTORY = 20;
+        let voltageChart, tempChart;
+        
+        const batteryNames = {
+            b1: { name: "Battery 1", type: "3.7V Li-ion", icon: "🔋", lowVoltage: 3.0, highVoltage: 4.2, lowTemp: 40, highTemp: 50 },
+            b2: { name: "Battery 2", type: "6V SLA", icon: "⚡", lowVoltage: 5.4, highVoltage: 6.8, lowTemp: 40, highTemp: 50 },
+            b3: { name: "Battery 3", type: "12V LiFePO4", icon: "🔋", lowVoltage: 10.0, highVoltage: 14.4, lowTemp: 40, highTemp: 50 }
+        };
+        
+        // Store current data from Firebase
+        let currentData = {
+            battery1: null,
+            battery2: null,
+            battery3: null,
+            solar: null,
+            system: null,
+            environment: null
+        };
+        
+        let lastDataTimestamp = null;
+        
+        // Helper functions
+        function getVoltageClass(voltage, batteryId) {
+            const config = batteryNames[batteryId];
+            if (!config) return "";
+            const range = config.highVoltage - config.lowVoltage;
+            const mid = config.lowVoltage + range / 2;
+            if (voltage >= mid) return "voltage-good";
+            if (voltage >= config.lowVoltage + range * 0.25) return "voltage-warning";
+            return "voltage-danger";
+        }
+        
+        function getTempClass(temp, batteryId) {
+            const config = batteryNames[batteryId];
+            if (temp < config.lowTemp) return "temp-normal";
+            if (temp < config.highTemp) return "temp-warm";
+            return "temp-hot";
+        }
+        
+        function getCurrentSign(current) {
+            if (current > 0) return '<i class="fas fa-arrow-up" style="color:#4CAF50;"></i> +';
+            if (current < 0) return '<i class="fas fa-arrow-down" style="color:#F44336;"></i> ';
+            return '<i class="fas fa-minus" style="color:#888;"></i> ';
+        }
+        
+        function createGauge(percent, color) {
+            const radius = 70;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percent / 100) * circumference;
+            return `
+                <svg viewBox="0 0 160 160" preserveAspectRatio="xMidYMid meet">
+                    <circle class="gauge-bg" cx="80" cy="80" r="${radius}" />
+                    <circle class="gauge-fill" cx="80" cy="80" r="${radius}" 
+                        style="stroke: ${color}; stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};" />
+                </svg>
+                <div class="gauge-text">
+                    <div class="gauge-percent">${Math.round(percent)}<span class="gauge-unit">%</span></div>
+                </div>
+            `;
+        }
+        
+        function updateHistory(batteryId, voltage, temp) {
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (historyData.timestamps.length === 0 || 
+                historyData.timestamps[historyData.timestamps.length - 1] !== timestamp) {
+                historyData.timestamps.push(timestamp);
+                if (historyData.timestamps.length > MAX_HISTORY) historyData.timestamps.shift();
+            }
+            
+            historyData[batteryId].voltages.push(voltage);
+            historyData[batteryId].temps.push(temp);
+            
+            if (historyData[batteryId].voltages.length > MAX_HISTORY) historyData[batteryId].voltages.shift();
+            if (historyData[batteryId].temps.length > MAX_HISTORY) historyData[batteryId].temps.shift();
+            
+            updateCharts();
+        }
+        
+        function updateCharts() {
+            if (voltageChart) {
+                voltageChart.data.labels = [...historyData.timestamps];
+                voltageChart.data.datasets[0].data = [...historyData.b1.voltages];
+                voltageChart.data.datasets[1].data = [...historyData.b2.voltages];
+                voltageChart.data.datasets[2].data = [...historyData.b3.voltages];
+                voltageChart.update('none');
+            }
+            
+            if (tempChart) {
+                tempChart.data.labels = [...historyData.timestamps];
+                tempChart.data.datasets[0].data = [...historyData.b1.temps];
+                tempChart.data.datasets[1].data = [...historyData.b2.temps];
+                tempChart.data.datasets[2].data = [...historyData.b3.temps];
+                tempChart.update('none');
+            }
+        }
+        
+        function initCharts() {
+            const ctx1 = document.getElementById('voltageChart').getContext('2d');
+            const ctx2 = document.getElementById('tempChart').getContext('2d');
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { 
+                    legend: { labels: { color: '#ccc', font: { size: 10 } }, position: 'bottom' }
+                },
+                scales: { 
+                    y: { grid: { color: '#333' } }, 
+                    x: { ticks: { color: '#aaa', maxRotation: 45, autoSkip: true } }
+                }
+            };
+            
+            voltageChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: historyData.timestamps,
+                    datasets: [
+                        { label: 'Battery 1 (V)', data: [], borderColor: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.1)', tension: 0.2, fill: true, pointRadius: 2 },
+                        { label: 'Battery 2 (V)', data: [], borderColor: '#2196F3', backgroundColor: 'rgba(33,150,243,0.1)', tension: 0.2, fill: true, pointRadius: 2 },
+                        { label: 'Battery 3 (V)', data: [], borderColor: '#FF9800', backgroundColor: 'rgba(255,152,0,0.1)', tension: 0.2, fill: true, pointRadius: 2 }
+                    ]
+                },
+                options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, title: { display: true, text: 'Voltage (V)', color: '#aaa' } } } }
+            });
+            
+            tempChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: historyData.timestamps,
+                    datasets: [
+                        { label: 'Battery 1 (°C)', data: [], borderColor: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.1)', tension: 0.2, fill: true, pointRadius: 2 },
+                        { label: 'Battery 2 (°C)', data: [], borderColor: '#2196F3', backgroundColor: 'rgba(33,150,243,0.1)', tension: 0.2, fill: true, pointRadius: 2 },
+                        { label: 'Battery 3 (°C)', data: [], borderColor: '#FF9800', backgroundColor: 'rgba(255,152,0,0.1)', tension: 0.2, fill: true, pointRadius: 2 }
+                    ]
+                },
+                options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, title: { display: true, text: 'Temperature (°C)', color: '#aaa' } } } }
+            });
+        }
+        
+        function renderUI() {
+            if (!currentData.battery1 || !currentData.battery2 || !currentData.battery3) {
+                return;
+            }
+            
+            let html = '';
+            for (let i = 1; i <= 3; i++) {
+                const batt = `b${i}`;
+                const config = batteryNames[batt];
+                const batteryData = currentData[`battery${i}`];
+                
+                if (!batteryData) continue;
+                
+                const percent = batteryData.percentage || 0;
+                const voltage = batteryData.voltage || 0;
+                const temp = batteryData.temperature || 0;
+                const current = batteryData.current || 0;
+                const balancingFactor = batteryData.balancing_factor || 1.0;
+                
+                const gaugeColor = percent >= 70 ? '#4CAF50' : (percent >= 30 ? '#FFC107' : '#F44336');
+                const voltageClass = getVoltageClass(voltage, batt);
+                const tempClass = getTempClass(temp, batt);
+                const currentSign = getCurrentSign(current);
+                const currentClass = current > 0 ? 'current-charge' : (current < 0 ? 'current-discharge' : '');
+                
+                html += `
+                    <div class="battery-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-battery-${percent >= 75 ? 'full' : (percent >= 30 ? 'half' : 'low')}" style="margin-right: 8px; color: ${gaugeColor};"></i> ${config.name}</h2>
+                            <div class="battery-icon">${config.icon}</div>
+                        </div>
+                        <div class="gauge-container">
+                            <div class="gauge">
+                                ${createGauge(percent, gaugeColor)}
+                            </div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label"><i class="fas fa-bolt"></i> VOLTAGE</div>
+                                <div class="stat-value ${voltageClass}">${voltage.toFixed(2)}<span style="font-size:0.8rem;">V</span></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label"><i class="fas fa-thermometer-half"></i> TEMP</div>
+                                <div class="stat-value ${tempClass}">${temp.toFixed(1)}<span style="font-size:0.8rem;">°C</span></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label"><i class="fas fa-exchange-alt"></i> CURRENT</div>
+                                <div class="stat-value ${currentClass}">${currentSign}${Math.abs(current).toFixed(2)}<span style="font-size:0.8rem;">A</span></div>
+                            </div>
+                            <div class="stat-item balancing-factor">
+                                <div class="stat-label"><i class="fas fa-tachometer-alt"></i> BALANCE FACTOR</div>
+                                <div class="stat-value" style="color: ${balancingFactor >= 1 ? '#4CAF50' : '#FFC107'}">${balancingFactor.toFixed(2)}x</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                updateHistory(batt, voltage, temp);
+            }
+            
+            document.getElementById('batteryGrid').innerHTML = html;
+        }
+        
+        function updateSystemPanel() {
+            if (!currentData.system) return;
+            
+            const sysStatus = currentData.system.status || 0;
+            let statusText = "Normal";
+            let statusColor = "#4CAF50";
+            if (sysStatus === 1) { statusText = "Charging"; statusColor = "#FFC107"; }
+            else if (sysStatus === 2) { statusText = "Load Active"; statusColor = "#2196F3"; }
+            else if (sysStatus === 3) { statusText = "ALERT"; statusColor = "#F44336"; }
+            
+            document.getElementById('sysStatus').innerHTML = `<span style="color: ${statusColor};">${statusText}</span>`;
+            document.getElementById('imbalance').innerHTML = `${(currentData.system.imbalance_percent || 0).toFixed(1)}%`;
+            
+            const solar = currentData.solar || {};
+            document.getElementById('solarCurrents').innerHTML = `${(solar.panel1_current || 0).toFixed(2)} / ${(solar.panel2_current || 0).toFixed(2)} / ${(solar.panel3_current || 0).toFixed(2)} A`;
+            
+            const env = currentData.environment || {};
+            document.getElementById('ambient').innerHTML = `${(env.ambient_temperature || 0).toFixed(1)}°C / ${(env.humidity || 0).toFixed(0)}%`;
+            
+            // Cycle and phase info
+            const cycleCount = currentData.system.cycle_count || 0;
+            const maxCycles = currentData.system.max_cycles || 3;
+            const phase = currentData.system.phase || "CHARGING";
+            document.getElementById('cycleInfo').innerHTML = `${cycleCount}/${maxCycles}`;
+            document.getElementById('phaseInfo').innerHTML = phase;
+            
+            const emergency = currentData.system.emergency_mode || false;
+            if (emergency) {
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #F44336;"></i> EMERGENCY MODE ACTIVE';
+                document.getElementById('connectionStatus').classList.add('alert-pulse');
+            } else {
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle" style="color: #4CAF50;"></i> Connected to Firebase - Live';
+                document.getElementById('connectionStatus').classList.remove('alert-pulse');
+            }
+            
+            if (currentData.system.last_update) {
+                lastDataTimestamp = Date.now();
+                document.getElementById('lastUpdate').innerHTML = `Last update: just now | ${new Date().toLocaleTimeString()}`;
+            }
+        }
+        
+        function checkAndUpdateAll() {
+            renderUI();
+            updateSystemPanel();
+        }
+        
+        // Update time ago
+        setInterval(() => {
+            if (lastDataTimestamp) {
+                const seconds = Math.floor((Date.now() - lastDataTimestamp) / 1000);
+                if (seconds < 60) {
+                    document.getElementById('lastUpdate').innerHTML = `Last update: ${seconds} sec ago | ${new Date().toLocaleTimeString()}`;
+                }
+            }
+        }, 1000);
+        
+        // Initialize charts
+        initCharts();
+        
+        // Firebase listeners
+        database.ref('/current/battery1').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                currentData.battery1 = val;
+                checkAndUpdateAll();
+            }
+        });
+        
+        database.ref('/current/battery2').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                currentData.battery2 = val;
+                checkAndUpdateAll();
+            }
+        });
+        
+        database.ref('/current/battery3').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                currentData.battery3 = val;
+                checkAndUpdateAll();
+            }
+        });
+        
+        database.ref('/current/solar').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                currentData.solar = val;
+                updateSystemPanel();
+            }
+        });
+        
+        database.ref('/current/system').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                currentData.system = val;
+                updateSystemPanel();
+            }
+        });
+        
+        database.ref('/current/environment').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                currentData.environment = val;
+                updateSystemPanel();
+            }
+        });
+        
+        database.ref('.info/connected').on('value', (snapshot) => {
+            if (snapshot.val() === true) {
+                console.log("Connected to Firebase");
+                if (!currentData.battery1 && !currentData.battery2 && !currentData.battery3) {
+                    document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle" style="color: #ffaa00;"></i> Connected - Waiting for data from ESP32...';
+                }
+            } else {
+                console.log("Disconnected from Firebase");
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle" style="color: #F44336;"></i> Disconnected from Firebase';
+            }
+        });
+        
+        window.addEventListener('resize', () => {
+            if (voltageChart) voltageChart.resize();
+            if (tempChart) tempChart.resize();
+        });
+        
+        setTimeout(() => {
+            if (!currentData.battery1 && !currentData.battery2 && !currentData.battery3) {
+                document.getElementById('batteryGrid').innerHTML = '<div class="loading"><i class="fas fa-exclamation-triangle"></i> No data received. Check if ESP32 is sending data to Firebase.</div>';
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
