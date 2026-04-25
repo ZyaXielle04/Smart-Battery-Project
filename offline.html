@@ -6,7 +6,7 @@
     <title>Offline - Battery Monitor</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
             color: white;
             min-height: 100vh;
@@ -15,6 +15,7 @@
             align-items: center;
             text-align: center;
             padding: 20px;
+            margin: 0;
         }
         .container {
             max-width: 400px;
@@ -30,6 +31,7 @@
         p {
             color: #aaa;
             margin-bottom: 20px;
+            line-height: 1.5;
         }
         button {
             background: #4CAF50;
@@ -39,9 +41,13 @@
             border-radius: 25px;
             font-size: 1rem;
             cursor: pointer;
+            font-weight: 600;
         }
         button:hover {
             background: #45a049;
+        }
+        .retry-btn {
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -49,9 +55,9 @@
     <div class="container">
         <div class="offline-icon">📡</div>
         <h1>You're Offline</h1>
-        <p>Unable to connect to the internet. Please check your connection and try again.</p>
-        <button onclick="location.reload()">Try Again</button>
-        <p style="margin-top: 20px; font-size: 0.8rem;">Cached data from last session may still be visible when back online.</p>
+        <p>Unable to connect to the internet.<br>Please check your connection and try again.</p>
+        <button onclick="location.reload()" class="retry-btn">Try Again</button>
+        <p style="margin-top: 20px; font-size: 0.8rem;">Cached data will appear when back online.</p>
     </div>
 </body>
 </html>

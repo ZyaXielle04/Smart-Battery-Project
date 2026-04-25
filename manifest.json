@@ -1,5 +1,5 @@
 {
-  "name": "Battery Balancing System",
+  "name": "Smart Battery Monitor",
   "short_name": "Batt Monitor",
   "description": "Real-time battery monitoring for 3-battery solar balancing system",
   "start_url": "/index.html",
@@ -7,6 +7,7 @@
   "theme_color": "#1a1a2e",
   "background_color": "#0f0f1a",
   "orientation": "portrait",
+  "scope": "/",
   "icons": [
     {
       "src": "icon-192.png",
@@ -23,9 +24,9 @@
   ],
   "shortcuts": [
     {
-      "name": "View Dashboard",
+      "name": "Live Dashboard",
       "short_name": "Dashboard",
-      "description": "View battery status dashboard",
+      "description": "View real-time battery status",
       "url": "/index.html",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }

@@ -6,9 +6,9 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Battery Monitor">
-    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-title" content="Batt Monitor">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
     <title>Battery Balancing System | PWA Monitor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -390,11 +390,207 @@
             background: rgba(244, 67, 54, 0.2);
             border-color: #F44336;
         }
+
+        /* ==================== iOS PWA INSTALL STYLES ==================== */
+        .pulse-animation {
+            animation: iosPulse 2s infinite;
+        }
+
+        @keyframes iosPulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.95; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .ios-install-banner {
+            background: linear-gradient(135deg, #1a4b6d, #2e7d5a);
+            color: white;
+            border-radius: 20px;
+            margin: 15px 0 20px 0;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 2px solid #ffd966;
+            position: relative;
+            animation: iosPulse 2s infinite;
+        }
+
+        .ios-install-banner-content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .ios-install-banner h3 {
+            color: #ffd966;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .ios-install-steps {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .ios-step {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 15px;
+            min-width: 100px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .ios-step-number {
+            background: #ffd966;
+            color: #1a4b6d;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .ios-step-icon {
+            font-size: 2rem;
+            margin: 10px 0;
+        }
+
+        .ios-step-text {
+            font-size: 0.85rem;
+        }
+
+        .ios-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .ios-btn-primary {
+            background: #ffd966;
+            color: #1a4b6d;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ios-btn-primary:hover {
+            transform: scale(1.05);
+            background: #ffed4a;
+        }
+
+        .ios-btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid #ffd966;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ios-btn-secondary:hover {
+            background: rgba(255,217,102,0.2);
+        }
+
+        /* Floating iOS Install Button */
+        .ios-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1a4b6d, #2e7d5a);
+            color: white;
+            border: 2px solid #ffd966;
+            border-radius: 50px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            animation: bounce 2s infinite;
+        }
+
+        .ios-fab:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #2e7d5a, #1a4b6d);
+        }
+
+        /* Installed Badge */
+        .installed-badge {
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        /* Toast Notification */
+        .ios-toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a4b6d;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .ios-toast.hide {
+            animation: slideOut 0.3s ease forwards;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- PWA Install Banner -->
+        <!-- PWA Install Banner (Android/Desktop) -->
         <div class="install-banner" id="installBanner">
             <span><i class="fas fa-download"></i> Install Battery Monitor App</span>
             <button id="installBtn">Install</button>
@@ -469,26 +665,198 @@
     </div>
 
     <script>
+        // ========== iOS PWA INSTALL FUNCTIONS ==========
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+        
+        let iosBannerVisible = false;
+        
+        // Show toast message
+        function showToast(message) {
+            const existingToast = document.querySelector('.ios-toast');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'ios-toast';
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Show iOS install banner
+        function showiOSInstallBanner() {
+            if (isStandalone) return;
+            if (iosBannerVisible) return;
+            
+            const existingBanner = document.getElementById('ios-install-banner');
+            if (existingBanner) existingBanner.remove();
+            
+            const banner = document.createElement('div');
+            banner.id = 'ios-install-banner';
+            banner.className = 'ios-install-banner';
+            banner.innerHTML = `
+                <div class="ios-install-banner-content">
+                    <h3><i class="fab fa-apple"></i> Install as App</h3>
+                    <p>Get the best experience with our battery monitoring app!</p>
+                    
+                    <div class="ios-install-steps">
+                        <div class="ios-step">
+                            <div class="ios-step-number">1</div>
+                            <div class="ios-step-icon"><i class="fas fa-share-alt"></i></div>
+                            <div class="ios-step-text">Tap <strong>Share</strong><br>button</div>
+                        </div>
+                        <div class="ios-step">
+                            <div class="ios-step-number">2</div>
+                            <div class="ios-step-icon"><i class="fas fa-plus-square"></i></div>
+                            <div class="ios-step-text">Scroll & tap<br><strong>Add to Home Screen</strong></div>
+                        </div>
+                        <div class="ios-step">
+                            <div class="ios-step-number">3</div>
+                            <div class="ios-step-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="ios-step-text">Tap <strong>Add</strong><br>in top right</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ios-buttons">
+                        <button class="ios-btn-primary" id="ios-gotit-btn">✓ Got it</button>
+                        <button class="ios-btn-secondary" id="ios-remind-btn">⏰ Remind Later</button>
+                    </div>
+                </div>
+            `;
+            
+            const header = document.querySelector('.header');
+            if (header) {
+                header.insertAdjacentElement('afterend', banner);
+            } else {
+                document.querySelector('.container').prepend(banner);
+            }
+            
+            iosBannerVisible = true;
+            
+            document.getElementById('ios-gotit-btn').addEventListener('click', () => {
+                banner.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => banner.remove(), 300);
+                iosBannerVisible = false;
+                localStorage.setItem('iosInstallDismissed', 'true');
+                showToast('You can tap the 📱 button to install later');
+            });
+            
+            document.getElementById('ios-remind-btn').addEventListener('click', () => {
+                banner.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => banner.remove(), 300);
+                iosBannerVisible = false;
+                const remindTime = Date.now() + 24 * 60 * 60 * 1000;
+                localStorage.setItem('iosInstallRemindTime', remindTime);
+                showToast('Reminder set for tomorrow');
+            });
+        }
+        
+        // Add floating iOS install button
+        function addiOSFloatingButton() {
+            if (!isIOS || isStandalone) return;
+            if (document.getElementById('ios-fab')) return;
+            
+            const fab = document.createElement('div');
+            fab.id = 'ios-fab';
+            fab.className = 'ios-fab';
+            fab.innerHTML = '<i class="fab fa-apple"></i> Install App';
+            
+            document.body.appendChild(fab);
+            
+            fab.addEventListener('click', () => {
+                showiOSInstallBanner();
+                setTimeout(() => {
+                    const banner = document.getElementById('ios-install-banner');
+                    if (banner) {
+                        banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            });
+        }
+        
+        // Triple-tap on header to show install instructions
+        function addTripleTapListener() {
+            let tapCount = 0;
+            let tapTimer;
+            
+            const header = document.querySelector('.header h1');
+            if (!header) return;
+            
+            header.addEventListener('click', () => {
+                tapCount++;
+                clearTimeout(tapTimer);
+                tapTimer = setTimeout(() => tapCount = 0, 2000);
+                
+                if (tapCount === 3) {
+                    showiOSInstallBanner();
+                    showToast('✨ Installation guide activated!');
+                    tapCount = 0;
+                }
+            });
+        }
+        
+        // Check if we should show iOS install instructions
+        function checkAndShowiOSInstructions() {
+            if (!isIOS || isStandalone) return;
+            
+            if (localStorage.getItem('iosInstallDismissed') === 'true') {
+                addiOSFloatingButton();
+                return;
+            }
+            
+            const remindTime = localStorage.getItem('iosInstallRemindTime');
+            if (remindTime && Date.now() < parseInt(remindTime)) {
+                addiOSFloatingButton();
+                return;
+            }
+            
+            setTimeout(() => {
+                showiOSInstallBanner();
+                addiOSFloatingButton();
+                addTripleTapListener();
+            }, 2000);
+        }
+        
+        // Add installed badge if running in standalone mode
+        function addInstalledBadge() {
+            if (isStandalone) {
+                const h1 = document.querySelector('.header h1');
+                if (h1 && !h1.innerHTML.includes('Installed')) {
+                    const span = document.createElement('span');
+                    span.className = 'installed-badge';
+                    span.innerHTML = '<i class="fas fa-check-circle"></i> Installed';
+                    h1.appendChild(span);
+                }
+            }
+        }
+        
+        // Initialize iOS PWA features
+        function initiOSFeatures() {
+            addInstalledBadge();
+            checkAndShowiOSInstructions();
+        }
+        
         // ========== PWA SETUP ==========
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
+                navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
                     .then(reg => {
                         console.log('Service Worker registered!', reg);
                         
-                        // Check for updates every minute
                         setInterval(() => {
                             reg.update();
                         }, 60000);
                         
-                        // Listen for new version
                         reg.onupdatefound = () => {
                             const installingWorker = reg.installing;
                             installingWorker.onstatechange = () => {
                                 if (installingWorker.state === 'installed') {
                                     if (navigator.serviceWorker.controller) {
-                                        // New version available
                                         document.getElementById('updateToast').classList.add('show');
                                         setTimeout(() => {
                                             document.getElementById('updateToast').classList.remove('show');
@@ -502,7 +870,7 @@
             });
         }
         
-        // PWA Installation
+        // PWA Installation (Android/Desktop)
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -522,10 +890,16 @@
             }
         });
         
-        // Hide install banner if already installed or dismissed
         window.addEventListener('appinstalled', () => {
             document.getElementById('installBanner').classList.remove('show');
         });
+        
+        // Initialize iOS features after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initiOSFeatures);
+        } else {
+            initiOSFeatures();
+        }
 
         // ========== FIREBASE CONFIGURATION ==========
         const firebaseConfig = {
@@ -533,7 +907,6 @@
             databaseURL: "https://smart-battery-b06ae-default-rtdb.asia-southeast1.firebasedatabase.app/"
         };
         
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         
@@ -554,7 +927,6 @@
             b3: { name: "Battery 3", type: "12V LiFePO4", icon: "🔋", lowVoltage: 10.0, highVoltage: 14.4, lowTemp: 40, highTemp: 50 }
         };
         
-        // Store current data from Firebase
         let currentData = {
             battery1: null,
             battery2: null,
@@ -566,7 +938,6 @@
         
         let lastDataTimestamp = null;
         
-        // Helper functions
         function getVoltageClass(voltage, batteryId) {
             const config = batteryNames[batteryId];
             if (!config) return "";
@@ -686,16 +1057,13 @@
         }
         
         function renderUI() {
-            if (!currentData.battery1 || !currentData.battery2 || !currentData.battery3) {
-                return;
-            }
+            if (!currentData.battery1 || !currentData.battery2 || !currentData.battery3) return;
             
             let html = '';
             for (let i = 1; i <= 3; i++) {
                 const batt = `b${i}`;
                 const config = batteryNames[batt];
                 const batteryData = currentData[`battery${i}`];
-                
                 if (!batteryData) continue;
                 
                 const percent = batteryData.percentage || 0;
@@ -741,10 +1109,8 @@
                         </div>
                     </div>
                 `;
-                
                 updateHistory(batt, voltage, temp);
             }
-            
             document.getElementById('batteryGrid').innerHTML = html;
         }
         
@@ -767,7 +1133,6 @@
             const env = currentData.environment || {};
             document.getElementById('ambient').innerHTML = `${(env.ambient_temperature || 0).toFixed(1)}°C / ${(env.humidity || 0).toFixed(0)}%`;
             
-            // Cycle and phase info
             const cycleCount = currentData.system.cycle_count || 0;
             const maxCycles = currentData.system.max_cycles || 3;
             const phase = currentData.system.phase || "CHARGING";
@@ -794,7 +1159,6 @@
             updateSystemPanel();
         }
         
-        // Update time ago
         setInterval(() => {
             if (lastDataTimestamp) {
                 const seconds = Math.floor((Date.now() - lastDataTimestamp) / 1000);
@@ -804,67 +1168,41 @@
             }
         }, 1000);
         
-        // Initialize charts
         initCharts();
         
-        // Firebase listeners
         database.ref('/current/battery1').on('value', (snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                currentData.battery1 = val;
-                checkAndUpdateAll();
-            }
+            if (val) { currentData.battery1 = val; checkAndUpdateAll(); }
         });
-        
         database.ref('/current/battery2').on('value', (snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                currentData.battery2 = val;
-                checkAndUpdateAll();
-            }
+            if (val) { currentData.battery2 = val; checkAndUpdateAll(); }
         });
-        
         database.ref('/current/battery3').on('value', (snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                currentData.battery3 = val;
-                checkAndUpdateAll();
-            }
+            if (val) { currentData.battery3 = val; checkAndUpdateAll(); }
         });
-        
         database.ref('/current/solar').on('value', (snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                currentData.solar = val;
-                updateSystemPanel();
-            }
+            if (val) { currentData.solar = val; updateSystemPanel(); }
         });
-        
         database.ref('/current/system').on('value', (snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                currentData.system = val;
-                updateSystemPanel();
-            }
+            if (val) { currentData.system = val; updateSystemPanel(); }
         });
-        
         database.ref('/current/environment').on('value', (snapshot) => {
             const val = snapshot.val();
-            if (val) {
-                currentData.environment = val;
-                updateSystemPanel();
-            }
+            if (val) { currentData.environment = val; updateSystemPanel(); }
         });
         
         database.ref('.info/connected').on('value', (snapshot) => {
             if (snapshot.val() === true) {
                 console.log("Connected to Firebase");
                 if (!currentData.battery1 && !currentData.battery2 && !currentData.battery3) {
-                    document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle" style="color: #ffaa00;"></i> Connected - Waiting for data from ESP32...';
+                    document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle" style="color: #ffaa00;"></i> Connected - Waiting for data...';
                 }
             } else {
-                console.log("Disconnected from Firebase");
-                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle" style="color: #F44336;"></i> Disconnected from Firebase';
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle" style="color: #F44336;"></i> Disconnected';
             }
         });
         

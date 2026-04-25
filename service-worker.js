@@ -1,11 +1,9 @@
-// service-worker.js
-// Battery Balancing System PWA Service Worker
-// Bypasses network cache and updates on reload
+// Service Worker for Smart Battery Monitor
+// Enhanced with aggressive update strategy
 
-const CACHE_NAME = 'battery-monitor-v3';
+const CACHE_NAME = 'battery-monitor-v6';
 const OFFLINE_URL = '/offline.html';
 
-// Files to cache (always cache latest version)
 const urlsToCache = [
   '/',
   '/index.html',
@@ -18,7 +16,6 @@ const urlsToCache = [
   'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js'
 ];
 
-// Install event - cache files
 self.addEventListener('install', event => {
   console.log('[SW] Installing...');
   event.waitUntil(
@@ -31,7 +28,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate event - clean old caches and take control
 self.addEventListener('activate', event => {
   console.log('[SW] Activating...');
   event.waitUntil(
@@ -51,23 +47,18 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - NETWORK FIRST strategy with always update
-// This ensures we get latest data but fallback to cache when offline
 self.addEventListener('fetch', event => {
   const url = event.request.url;
   
-  // Skip Firebase and external APIs (they handle their own caching)
   if (url.includes('firebaseio.com') || 
       url.includes('googleapis.com') ||
       url.includes('gstatic.com') ||
       url.includes('cloudflare.com') ||
       url.includes('cdn.jsdelivr.net') ||
       url.includes('cdnjs.cloudflare.com')) {
-    // Network first for external APIs (no caching)
     event.respondWith(
       fetch(event.request)
         .catch(() => {
-          // Return a simple response for offline
           return new Response(JSON.stringify({ error: 'Offline' }), {
             headers: { 'Content-Type': 'application/json' }
           });
@@ -76,13 +67,10 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // For HTML and app files - NETWORK FIRST, fallback to cache
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Clone the response
         const responseToCache = response.clone();
-        // Update cache with new version
         caches.open(CACHE_NAME)
           .then(cache => {
             cache.put(event.request, responseToCache);
@@ -90,13 +78,9 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(() => {
-        // If network fails, try cache
         return caches.match(event.request)
           .then(response => {
-            if (response) {
-              return response;
-            }
-            // If requesting HTML page, return offline page
+            if (response) return response;
             if (event.request.headers.get('accept').includes('text/html')) {
               return caches.match(OFFLINE_URL);
             }
@@ -109,7 +93,6 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Message listener for skipWaiting
 self.addEventListener('message', event => {
   if (event.data === 'skipWaiting') {
     self.skipWaiting();
